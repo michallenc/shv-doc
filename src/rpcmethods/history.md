@@ -52,28 +52,29 @@ required.
 
 The parameter is an *IMap* containing the following fields:
 
-| Key | Name  | Type           |                        |
-| --- | ----- | -------------- | ---------------------- |
-| 1   | Since | DateTime\|Null | Defines the starting point for log retrieval. Records with a timestamp exactly matching this value are excluded, allowing seamless continuation from the last retrieved record. *Default:* The time at which the request is received. |
-| 2   | Until | DateTime\|Null | Specifies the end point for log retrieval. Only records with a timestamp within the range `(Since, Until>` will be returned. If `Until` comes before `Since`, the interval becomes `<Until, Since)`. In such cases, logs records are returned in **reverse order** (from newest to oldest). If there are too many log records matching specified interval, the device may return fewer records and stop before reaching `Until` timestamp. To retrieve all logs, send a follow-up request using the timestamp of the last returned record as the new `Since`. *Default:* The time at which the request is received. |
-| 3   | Count | Int\|Null      | Limits the maximum number of records returned. Device can provides number of records it decides on but sometimes it is desirable to lower this limit, for example to single record, and this option allows that. If multiple logs have the same timestamp, all must be included even if this exceeds the limit.  *Default:* Unlimited. The snapshot is returned always complete regardless `Count` value specified. |
-| 4   | Ri    | [RPC Resource Identifier](../rpcri.md)\|Null | Filters the results to include only signals matching specified RI. Filter must be relative to `getLog` shv path. It is strongly recommended to call `getLog` using the most specific path possible instead of relying on the `Ri` field, as access permissions are determined by the request path. Using a shorter path may result in insufficient access rights. *Default:* Null, filter is off. |
+| Key | Name  | Type                                         | Description
+| --- | ----- | --------------                               | ----------------------
+| 1   | Since | DateTime\|Null                               | Defines the starting point for log retrieval. Records with a timestamp exactly matching this value are excluded, allowing seamless continuation from the last retrieved record. *Default:* The time at which the request is received.
+| 2   | Until | DateTime\|Null                               | Specifies the end point for log retrieval. Only records with a timestamp within the range `(Since, Until>` will be returned. If `Until` comes before `Since`, the interval becomes `<Until, Since)`. In such cases, log records are returned in **reverse order** (from newest to oldest). If there are too many log records matching the specified interval, the device may return fewer records and stop before reaching the `Until` timestamp. To retrieve all logs, send a follow-up request using the timestamp of the last returned record as the new `Since`. *Default:* The time at which the request is received.
+| 3   | Count | Int\|Null                                    | Limits the maximum number of records returned. The device can provide number of records it decides on, but sometimes it is desirable to lower this limit, for example, to a single record, and this option allows that. If multiple logs have the same timestamp, all must be included, even if this exceeds the limit.  *Default:* Unlimited. The snapshot is always returned complete regardless of the `Count` value specified.
+| 4   | Ri    | [RPC Resource Identifier](../rpcri.md)\|Null | Filters the results to include only signals matching the specified RI. Filter must be relative to `getLog` shv path. It is strongly recommended to call `getLog` using the most specific path possible instead of relying on the `Ri` field, as access permissions are determined by the request path. Using a shorter path may result in insufficient access rights. *Default:* Null, filter is off.
 
 
-The provided value is list of *IMap*s with following fields:
+The provided a value is list of *IMap*s with the following fields:
 
-| Key | Name      | Type     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --- | --------- | -------- | -------------------                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 1   | TimeStamp | DateTime | Timestamp of the record.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 2   | Ref       | Int      | It provides a way to reference the previous record to use it as the value for `Path`, `Signal` and `Source`. It is *Int* where `0` is record right before this one in the list. The offset must always be to the most closest record that specifies desired values. This simplifies parsing because there is no need to remember every single received record but only the latest unique ones. It is up to the implementation if this is used or not. Simple implementations can choose to generate bigger messages and not use this field at all. |
-| 3   | Path      | String   | SHV path to the node relative to the path `getLog` was called on. *Default:* empty path `""`.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| 4   | Signal    | String   | Signal name. *Default:* `chng`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| 5   | Source    | DateTime | Signal's associated method name.  *Default:* `get`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 6   | Value     | Any      | Signal's value (parameter).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 7   | UserId    | String   | `UserId` carried by signal message. *Default:* `null`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 8   | Repeat    | Bool     | `Repeat` carried by signal message. *Default:* `False`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| 9   | Provisional | Bool     | `True` when this entry comes from a [provisional](#provisional-entries) (a.k.a. dirty) log. *Default:* `False`. |
-| 10  | Inaccurate | Bool    | `True` if the record's timestamp might not be accurate because the record [occured before ambiguity](#inaccurate-timestamp). *Default:* `False`. |
+| Key | Name              | Type           | Description
+| --- | ---------         | --------       | -------------------
+| 1   | TimeStamp         | DateTime       | Timestamp of the record. This is time relative to the current device time or the current time provided in the request.
+| 2   | Ref               | Int            | It provides a way to reference the previous record to use it as the value for `Path`, `Signal`, and `Source`. It is *Int* where `0` is the record right before this one in the list. The offset must always be to the most closest record that specifies desired values. This simplifies parsing because there is no need to remember every single received record, but only the latest unique ones. It is up to the implementation whether this is used or not. Simple implementations can choose to generate bigger messages and not use this field at all.
+| 3   | Path              | String         | SHV path to the node relative to the path `getLog` was called on. *Default:* empty path `""`.
+| 4   | Signal            | String         | Signal name. *Default:* `chng`.
+| 5   | Source            | String         | Signal's associated method name.  *Default:* `get`.
+| 6   | Value             | Any            | Signal's value (parameter).
+| 7   | UserId            | String\|Null   | `UserId` carried by signal message. *Default:* `null`.
+| 8   | Repeat            | Bool           | `Repeat` carried by signal message. *Default:* `false`.
+| 9   | Provisional       | Bool           | `True` when this entry comes from a [provisional](#provisional-entries) (a.k.a. dirty) log. *Default:* `false`.
+| 10  | Inaccurate        | Bool           | `True` if the record's timestamp might not be accurate because the record [occured before ambiguity](#inaccurate-timestamp). *Default:* `false`.
+| 11  | OriginalTimeStamp | DateTime\|Null | Original timestamp of the record. This is the time of the device creating the original log at the time of the log creation. This timestamp can't change if teh current time of the device changes. *Default*: `null`.
 
 The provided records should be sorted according to the `TimeStamp` field `1`
 either in ascending order if `Since` < `Until` or descending order
@@ -201,15 +202,15 @@ Every record is *IMap* with following fields:
     (at log creation time).
   * `3`(*timeJump*) time jump record. This is information that all previous
     recorded times should actually be considered to be with time modification.
-    The time offset is specified in field `60`. Only fields `1`, `9`, and `60`
-    are expected for this record type. This is recorded when time
+    The time offset is specified in field `60`. Only fields `1`, `9`, `60`, and
+    optional `10` are expected for this record type. This is recorded when time
     synchronization causes system clock to jump by more than a second.
   * `4`(*timeAbig*) time ambiguity record. This is information that date and
     time of the new logs has no relevance compared to the previous ones. Any
     subsequent records of type `3` should not be applied to them. This is
     recorded when time jump length can't be determined (backward skip of time
     commonly after boot) and thus time desynchronization is detected. The only
-    fields `1` and `9` are expected for this record type.
+    fields `1`, `9`, and optional `10` are expected for this record type.
 * `1`(*timestamp*): *DateTime* of system when record was created. This depends
   on record type. For normal records this is time of signal retrieval.
 * `2`(*path*): *String* with SHV path to the node relative to the `.history`'s
@@ -231,12 +232,19 @@ Every record is *IMap* with following fields:
   fetch will always provide this record unmodified for this ID. The default if
   not provided is the *id* of previous provided record plus one. The default of
   the first record is the *offset* parameter.
-* `10` (*ref*): *Int* with reference to the previous record with matching
-  *type*, *path*, *signal*, *source*, and *accessLevel* fields. These fields
-  are thus exclusive with this one. This field should be used to reduce the
-  size of the message. The value `0` is the record right before this one in the
-  list, `1` is the one before it and so on. The offset must always be the most
-  closes record that specifies desired values.
+* `10` (*ref*): obsolete variant of *idref*. The difference is that offset is
+  relative to the index of the record in the list. *idref* is preffered instead
+  because it allows referencing records outside of the provided list.
+* `11` (*idref*): *Int* with offset for the *id* to the older matching record.
+  This must always be the closest matching record. For *normal* and *keep*
+  records this is matching combination of *path*, *signal*, *source*, and
+  *accessLevel*. For *timeJump* and *timeAbiq* records, this is the closest older
+  record of either type. The fields *type*, *path*, *signal*, *source*, and
+  *accessLevel* can be left out in case the referenced record is in the same
+  list (same method invocation). The value `0` is special (points to itself) and
+  can be optionally used to signal that this is the oldest record of this type
+  in the log.
+
 * `60`(*timeJump*): *Int* with number of seconds of time skip. This is used with
   *type* being `3` (*timeJump*).
 
@@ -244,23 +252,40 @@ Fetch that is outside of the valid record ID range must not provide error.
 
 #### `.history/**/.records/*:span`
 
-| Name   | SHV Path                 | Flags  | Param Type | Result Type                         | Access  |
-|--------|--------------------------|--------|------------|-------------------------------------|---------|
-| `span` | `.history/**/.records/*` | Getter |            | `[i:smallest,i:biggest,i(1,):span]` | Service |
+| Name   | SHV Path                 | Flags  | Param Type | Result Type    | Access  |
+|--------|--------------------------|--------|------------|----------------|---------|
+| `span` | `.history/**/.records/*` | Getter |            | `!historySpan` | Service |
 
 This allows fetch of boundaries for the record IDs and also the keep record
 range.
 
-This method provides three integers in a list. The first *Int* is the smallest
-valid record ID, the second *Int* is the biggest valid record ID plus one (to
-allow case when there are no records to be signaled with same value as the first
-record) and the third *Int* is the keep record span.
+This method provides List with the following items:
+* The first item is *Int* with the smallest valid record ID
+* The second item is *Int* with the largest valid record ID plus one (to allow
+  case when there are no records to be signaled with same value as the smallest
+  ID)
+* The third item is positive-nonzero *Int* with keep record span. This is range
+  of the records where all combinations of SHV path, signal name and signal's
+  associated method name in the log are present. That is achieved by creating
+  keep records that are copy of older ones when no signal for them is received
+  for some time. It allows of fetching the full log state without going through
+  the whole history. 
+* The fourth optional item is *Int* with ID of the newest *timeJump* or
+  *timeAbiq* record. In combination with *idref* in
+  `.history/**/.records/*:fetch` method this provides a way for following a real
+  time modifications in the records.
 
-The keep record span is range of records where all combinations of SHV path,
-signal name and signal's associated method name in the log are present. That is
-achieved by creating keep records that are copy of older ones when no signal for
-them is received for some time. It allows of fetching the full log state without
-going through the whole history.
+#### `.history/**/.records/*:contains`
+
+| Name       | SHV Path                 | Flags  | Param Type | Result Type | Access  |
+|------------|--------------------------|--------|------------|-------------|---------|
+| `contains` | `.history/**/.records/*` | Getter | `s`        | `b`         | Service |
+
+Check if log contains records of given RPC RI. This allows generic tools to
+decide on which log should be fetched.
+
+The argument must be valid [signal RI](../rpcri.md) and the result is boolean
+informing caller if such signals are in the log.
 
 ### `.history/**/.files/*`
 
